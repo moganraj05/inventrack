@@ -1,0 +1,25 @@
+{
+  "name": "inventrack",
+  "version": "1.0.0",
+  "description": "Microservices Inventory Management System",
+  "type":"module",
+  "scripts": {
+    "install:all": "npm install --prefix api-gateway && npm install --prefix auth-service && npm install --prefix product-service && npm install --prefix inventory-service && npm install --prefix supplier-service && npm install --prefix frontend",
+    "dev:gateway": "npm run dev --prefix api-gateway",
+    "dev:auth": "npm run dev --prefix auth-service",
+    "dev:product": "npm run dev --prefix product-service",
+    "dev:inventory": "npm run dev --prefix inventory-service",
+    "dev:supplier": "npm run dev --prefix supplier-service",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently -n \"GW,AUTH,PROD,INV,SUPP,UI\" -c \"cyan,green,yellow,blue,magenta,white\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:product\" \"npm run dev:inventory\" \"npm run dev:supplier\" \"npm run dev:frontend\"",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "mongoose": "^8.0.3"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

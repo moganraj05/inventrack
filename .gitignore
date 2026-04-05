@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# env files (IMPORTANT - contains DB password)
+.env
+
+# build files
+dist/
+build/
+
+# logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# optional (frontend build)
+frontend/node_modules/
+frontend/dist/
