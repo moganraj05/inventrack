@@ -6,6 +6,12 @@ import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const roleBadgeClass = (role) => {
+  if (role === 'admin') return 'badge-purple';
+  if (role === 'manager') return 'badge-green';
+  return 'badge-blue';
+};
+
 export default function UsersPage() {
   const { isAdmin, user: me } = useAuth();
   const navigate = useNavigate();
@@ -62,7 +68,7 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td><span style={{ fontSize: '0.875rem' }}>{u.email}</span></td>
-                    <td><span className={`badge ${u.role === 'admin' ? 'badge-purple' : 'badge-blue'}`}>{u.role}</span></td>
+                    <td><span className={`badge ${roleBadgeClass(u.role)}`}>{u.role}</span></td>
                     <td><span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-IN') : 'Never'}</span></td>
                     <td><span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{new Date(u.createdAt).toLocaleDateString('en-IN')}</span></td>
                     <td>
@@ -78,11 +84,12 @@ export default function UsersPage() {
 
       <Modal isOpen={!!roleModal} onClose={() => setRoleModal(null)} title={`Change Role — ${roleModal?.name}`}>
         <div style={{ marginBottom: 20 }}>
-          <p style={{ color: 'var(--text2)', marginBottom: 16, fontSize: '0.9rem' }}>Current role: <span className={`badge ${roleModal?.role === 'admin' ? 'badge-purple' : 'badge-blue'}`}>{roleModal?.role}</span></p>
+          <p style={{ color: 'var(--text2)', marginBottom: 16, fontSize: '0.9rem' }}>Current role: <span className={`badge ${roleBadgeClass(roleModal?.role)}`}>{roleModal?.role}</span></p>
           <div className="form-group">
             <label className="form-label">New Role</label>
             <select className="form-control" value={newRole} onChange={e => setNewRole(e.target.value)}>
               <option value="staff">Staff</option>
+              <option value="manager">Manager</option>
               <option value="admin">Admin</option>
             </select>
           </div>

@@ -11,6 +11,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BODY_LIMIT = '5mb';
 
 // Security middleware
 app.use(helmet());
@@ -40,8 +41,8 @@ const authLimiter = rateLimit({
 });
 
 app.use(globalLimiter);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 
 // JWT Authentication Middleware
 const authenticate = (req, res, next) => {

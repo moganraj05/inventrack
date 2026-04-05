@@ -14,20 +14,69 @@ const CACHE_KEYS = {
 // GET /api/products
 export const getAllProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, category, isActive } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      category,
+      isActive,
+      hasImage,
+      priceMin,
+      priceMax,
+      sortBy = 'created_desc'
+    } = req.query;
     const cacheKey = `${CACHE_KEYS.ALL_PRODUCTS}_${JSON.stringify(req.query)}`;
 
     const cached = getCache(cacheKey);
     if (cached) return res.json({ ...cached, fromCache: true });
 
     const query = {};
-    if (search) query.$text = { $search: search };
+    const andClauses = [];
+
+    if (search) {
+      const regex = new RegExp(search.trim(), 'i');
+      andClauses.push({
+        $or: [
+          { name: regex },
+          { sku: regex },
+          { description: regex },
+          { tags: regex }
+        ]
+      });
+    }
     if (category) query.category = category;
     if (isActive !== undefined) query.isActive = isActive === 'true';
+    if (hasImage === 'true') andClauses.push({ imageUrl: { $exists: true, $nin: ['', null] } });
+    if (hasImage === 'false') {
+      andClauses.push({
+        $or: [
+          { imageUrl: { $exists: false } },
+          { imageUrl: '' },
+          { imageUrl: null }
+        ]
+      });
+    }
+    if (priceMin !== undefined || priceMax !== undefined) {
+      const priceQuery = {};
+      if (priceMin !== undefined && priceMin !== '') priceQuery.$gte = parseFloat(priceMin);
+      if (priceMax !== undefined && priceMax !== '') priceQuery.$lte = parseFloat(priceMax);
+      andClauses.push({ price: priceQuery });
+    }
+    if (andClauses.length) query.$and = andClauses;
+
+    const sortMap = {
+      created_desc: { createdAt: -1 },
+      created_asc: { createdAt: 1 },
+      name_asc: { name: 1 },
+      name_desc: { name: -1 },
+      price_asc: { price: 1 },
+      price_desc: { price: -1 }
+    };
+    const sort = sortMap[sortBy] || sortMap.created_desc;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [products, total] = await Promise.all([
-      Product.find(query).populate('category', 'name').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+      Product.find(query).populate('category', 'name').sort(sort).skip(skip).limit(parseInt(limit)),
       Product.countDocuments(query)
     ]);
 

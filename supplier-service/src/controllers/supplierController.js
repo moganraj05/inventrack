@@ -4,7 +4,7 @@ import Supplier from '../models/Supplier.js';
 // GET /api/suppliers
 export const getAllSuppliers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, isActive, category } = req.query;
+    const { page = 1, limit = 20, search, isActive, category, minRating = '', sortBy = 'created_desc' } = req.query;
     const query = {};
 
     if (search) {
@@ -17,10 +17,21 @@ export const getAllSuppliers = async (req, res) => {
     }
     if (isActive !== undefined) query.isActive = isActive === 'true';
     if (category) query.category = category;
+    if (minRating !== '') query.rating = { $gte: Number(minRating) };
+
+    const sortMap = {
+      created_desc: { createdAt: -1 },
+      created_asc: { createdAt: 1 },
+      rating_desc: { rating: -1, createdAt: -1 },
+      rating_asc: { rating: 1, createdAt: -1 },
+      name_asc: { name: 1 },
+      name_desc: { name: -1 }
+    };
+    const sort = sortMap[sortBy] || sortMap.created_desc;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [suppliers, total] = await Promise.all([
-      Supplier.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+      Supplier.find(query).sort(sort).skip(skip).limit(parseInt(limit)),
       Supplier.countDocuments(query)
     ]);
 
@@ -97,15 +108,39 @@ export const deleteSupplier = async (req, res) => {
 // GET /api/suppliers/stats/summary
 export const getSupplierStats = async (req, res) => {
   try {
-    const [total, active, byCategory] = await Promise.all([
+    const [total, active, byCategory, ratingSummary, topRated, recentSuppliers] = await Promise.all([
       Supplier.countDocuments(),
       Supplier.countDocuments({ isActive: true }),
       Supplier.aggregate([
         { $group: { _id: '$category', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
-      ])
+      ]),
+      Supplier.aggregate([
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: '$rating' },
+            topRatedCount: { $sum: { $cond: [{ $gte: ['$rating', 4] }, 1, 0] } }
+          }
+        }
+      ]),
+      Supplier.find().sort({ rating: -1, createdAt: -1 }).limit(5).select('name rating category isActive'),
+      Supplier.find().sort({ createdAt: -1 }).limit(5).select('name createdAt category isActive')
     ]);
-    res.json({ success: true, stats: { total, active, inactive: total - active, byCategory } });
+
+    res.json({
+      success: true,
+      stats: {
+        total,
+        active,
+        inactive: total - active,
+        averageRating: Number((ratingSummary[0]?.averageRating || 0).toFixed(1)),
+        topRatedCount: ratingSummary[0]?.topRatedCount || 0,
+        byCategory,
+        topRated,
+        recentSuppliers
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats', details: err.message });
   }

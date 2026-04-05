@@ -62,6 +62,7 @@ export const inventoryAPI = {
   initialize: (data) => api.post('/inventory', data),
   adjust: (productId, data) => api.post(`/inventory/${productId}/adjust`, data),
   updateSettings: (productId, data) => api.put(`/inventory/${productId}`, data),
+  getFilterMeta: () => api.get('/inventory/meta/filters'),
   getLowStock: () => api.get('/inventory/alerts/low-stock'),
   getSummary: () => api.get('/inventory/dashboard/summary'),
   // Stock Transfer endpoints

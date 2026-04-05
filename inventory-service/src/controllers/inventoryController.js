@@ -6,12 +6,13 @@ import { getCache, setCache, invalidatePattern } from '../config/cache.js';
 // GET /api/inventory - all stock items
 export const getAllStock = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, lowStock } = req.query;
+    const { page = 1, limit = 20, search, lowStock, location, status } = req.query;
     const cacheKey = `stock_all_${JSON.stringify(req.query)}`;
     const cached = getCache(cacheKey);
     if (cached) return res.json({ ...cached, fromCache: true });
 
     const query = {};
+    const exprConditions = [];
     if (search) {
       query.$or = [
         { productName: { $regex: search, $options: 'i' } },
@@ -19,8 +20,21 @@ export const getAllStock = async (req, res) => {
       ];
     }
     if (lowStock === 'true') {
-      query.$expr = { $lte: ['$quantity', '$lowStockThreshold'] };
+      exprConditions.push({ $lte: ['$quantity', '$lowStockThreshold'] });
     }
+    if (location) {
+      query.location = { $regex: `^${location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' };
+    }
+    if (status === 'out') query.quantity = 0;
+    if (status === 'low') {
+      exprConditions.push({ $gt: ['$quantity', 0] });
+      exprConditions.push({ $lte: ['$quantity', '$lowStockThreshold'] });
+    }
+    if (status === 'healthy') {
+      exprConditions.push({ $gt: ['$quantity', '$lowStockThreshold'] });
+    }
+    if (exprConditions.length === 1) query.$expr = exprConditions[0];
+    if (exprConditions.length > 1) query.$expr = { $and: exprConditions };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [stocks, total] = await Promise.all([
@@ -38,6 +52,33 @@ export const getAllStock = async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stock', details: err.message });
+  }
+};
+
+// GET /api/inventory/meta/filters
+export const getInventoryFilterMeta = async (req, res) => {
+  try {
+    const cacheKey = 'inventory_filter_meta';
+    const cached = getCache(cacheKey);
+    if (cached) return res.json({ ...cached, fromCache: true });
+
+    const locations = await Stock.distinct('location');
+    const result = {
+      success: true,
+      meta: {
+        locations: locations.filter(Boolean).sort((a, b) => a.localeCompare(b)),
+        statuses: [
+          { value: 'healthy', label: 'Healthy Stock' },
+          { value: 'low', label: 'Low Stock' },
+          { value: 'out', label: 'Out of Stock' }
+        ]
+      }
+    };
+
+    setCache(cacheKey, result, 300);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch inventory filters', details: err.message });
   }
 };
 
@@ -225,7 +266,28 @@ export const getInventorySummary = async (req, res) => {
     ]);
 
     const stockAggregate = await Stock.aggregate([
-      { $group: { _id: null, totalQuantity: { $sum: '$quantity' }, outOfStock: { $sum: { $cond: [{ $eq: ['$quantity', 0] }, 1, 0] } } } }
+      {
+        $group: {
+          _id: null,
+          totalQuantity: { $sum: '$quantity' },
+          outOfStock: { $sum: { $cond: [{ $eq: ['$quantity', 0] }, 1, 0] } },
+          healthyStock: { $sum: { $cond: [{ $gt: ['$quantity', '$lowStockThreshold'] }, 1, 0] } },
+          criticalLowStock: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gt: ['$quantity', 0] },
+                    { $lte: ['$quantity', { $divide: ['$lowStockThreshold', 2] }] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
     ]);
 
     const result = {
@@ -236,6 +298,8 @@ export const getInventorySummary = async (req, res) => {
         totalTransactions,
         totalQuantity: stockAggregate[0]?.totalQuantity || 0,
         outOfStock: stockAggregate[0]?.outOfStock || 0,
+        healthyStock: stockAggregate[0]?.healthyStock || 0,
+        criticalLowStock: stockAggregate[0]?.criticalLowStock || 0,
         recentTransactions
       }
     };

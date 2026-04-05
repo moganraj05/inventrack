@@ -36,7 +36,8 @@ export default function RegisterPage() {
       toast.success('Account created! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Registration failed');
+      const validationMessage = err.response?.data?.errors?.[0]?.msg;
+      toast.error(validationMessage || err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }

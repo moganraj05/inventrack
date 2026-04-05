@@ -10,13 +10,14 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3004;
+const BODY_LIMIT = '5mb';
 
 connectDB();
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 
 app.use('/api/suppliers', supplierRoutes);
 app.get('/health', (req, res) => res.json({ status: 'OK', service: 'Supplier Service' }));

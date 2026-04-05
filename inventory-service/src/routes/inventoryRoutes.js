@@ -2,13 +2,14 @@ import express from 'express';
 import { body } from 'express-validator';
 import {
   getAllStock, getStockByProduct, initializeStock, adjustStock,
-  updateStockSettings, getLowStockAlerts, getTransactions, getInventorySummary
+  updateStockSettings, getLowStockAlerts, getTransactions, getInventorySummary, getInventoryFilterMeta
 } from '../controllers/inventoryController.js';
 
 const router = express.Router();
 
 // Stock routes
 router.get('/', getAllStock);
+router.get('/meta/filters', getInventoryFilterMeta);
 router.get('/alerts/low-stock', getLowStockAlerts);
 router.get('/dashboard/summary', getInventorySummary);
 router.get('/:productId', getStockByProduct);
