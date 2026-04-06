@@ -11,10 +11,14 @@ import InventoryPage from './pages/InventoryPage';
 import SuppliersPage from './pages/SuppliersPage';
 import TransactionsPage from './pages/TransactionsPage';
 import UsersPage from './pages/UsersPage';
+import ProcurementPage from './pages/ProcurementPage';
 
-function ProtectedRoute({ children }) {
-  const { user } = useAuth();
+function ProtectedRoute({ children, allowedRoles }) {
+  const { user, hasRole } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+  if (allowedRoles?.length && !hasRole(...allowedRoles)) {
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 }
 
@@ -40,7 +44,8 @@ function AppRoutes() {
       <Route path="/inventory" element={<ProtectedRoute><AppLayout><InventoryPage /></AppLayout></ProtectedRoute>} />
       <Route path="/suppliers" element={<ProtectedRoute><AppLayout><SuppliersPage /></AppLayout></ProtectedRoute>} />
       <Route path="/transactions" element={<ProtectedRoute><AppLayout><TransactionsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/users" element={<ProtectedRoute><AppLayout><UsersPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/procurement" element={<ProtectedRoute allowedRoles={['manager', 'admin']}><AppLayout><ProcurementPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><AppLayout><UsersPage /></AppLayout></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
     </Routes>

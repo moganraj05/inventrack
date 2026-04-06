@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import Topbar from '../components/Topbar';
 import { InteractiveBarChart, InteractivePieChart } from '../components/InteractiveCharts';
 import { inventoryAPI, productAPI, supplierAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function StatCard({ icon, label, value, sub, color = 'var(--accent)' }) {
   return (
@@ -37,6 +38,7 @@ const txTypes = {
 };
 
 export default function DashboardPage() {
+  const { canAccessProcurement } = useAuth();
   const [summary, setSummary] = useState(null);
   const [lowStock, setLowStock] = useState([]);
   const [productCount, setProductCount] = useState(0);
@@ -282,6 +284,7 @@ export default function DashboardPage() {
                 <Link to="/inventory" className="btn btn-secondary">View Inventory</Link>
                 <Link to="/suppliers" className="btn btn-secondary">Manage Suppliers</Link>
                 <Link to="/transactions" className="btn btn-secondary">View Transactions</Link>
+                {canAccessProcurement && <Link to="/procurement" className="btn btn-secondary">Open Procurement</Link>}
               </div>
             </div>
           </>

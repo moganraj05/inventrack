@@ -11,8 +11,11 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, canAccessProcurement, canManageUsers } = useAuth();
   const navigate = useNavigate();
+  const visibleNavItems = canAccessProcurement
+    ? [...navItems, { to: '/procurement', icon: 'â—‰', label: 'Procurement' }]
+    : navItems;
 
   const handleLogout = () => {
     logout();
@@ -37,7 +40,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {navItems.map(({ to, icon, label }) => (
+        {visibleNavItems.map(({ to, icon, label }) => (
           <NavLink key={to} to={to} style={({ isActive }) => ({
             display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
             borderRadius: 'var(--radius)', fontSize: '0.875rem', fontWeight: 500,
@@ -54,7 +57,7 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {isAdmin && (
+        {canManageUsers && (
           <NavLink to="/users" style={({ isActive }) => ({
             display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
             borderRadius: 'var(--radius)', fontSize: '0.875rem', fontWeight: 500,

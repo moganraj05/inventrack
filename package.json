@@ -4,14 +4,15 @@
   "description": "Microservices Inventory Management System",
   "type":"module",
   "scripts": {
-    "install:all": "npm install --prefix api-gateway && npm install --prefix auth-service && npm install --prefix product-service && npm install --prefix inventory-service && npm install --prefix supplier-service && npm install --prefix frontend",
+    "install:all": "npm install --prefix api-gateway && npm install --prefix auth-service && npm install --prefix product-service && npm install --prefix inventory-service && npm install --prefix supplier-service && npm install --prefix procurement-service && npm install --prefix frontend",
     "dev:gateway": "npm run dev --prefix api-gateway",
     "dev:auth": "npm run dev --prefix auth-service",
     "dev:product": "npm run dev --prefix product-service",
     "dev:inventory": "npm run dev --prefix inventory-service",
     "dev:supplier": "npm run dev --prefix supplier-service",
+    "dev:procurement": "npm run dev --prefix procurement-service",
     "dev:frontend": "npm run dev --prefix frontend",
-    "dev": "concurrently -n \"GW,AUTH,PROD,INV,SUPP,UI\" -c \"cyan,green,yellow,blue,magenta,white\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:product\" \"npm run dev:inventory\" \"npm run dev:supplier\" \"npm run dev:frontend\"",
+    "dev": "concurrently -n \"GW,AUTH,PROD,INV,SUPP,PROC,UI\" -c \"cyan,green,yellow,blue,magenta,red,white\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:product\" \"npm run dev:inventory\" \"npm run dev:supplier\" \"npm run dev:procurement\" \"npm run dev:frontend\"",
     "seed": "node seed.js"
   },
   "dependencies": {

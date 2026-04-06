@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'staff' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -33,8 +33,8 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(form);
-      toast.success('Account created! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 2000);
+      toast.success('Account created! Redirecting to dashboard...');
+      navigate('/dashboard');
     } catch (err) {
       const validationMessage = err.response?.data?.errors?.[0]?.msg;
       toast.error(validationMessage || err.response?.data?.error || 'Registration failed');
@@ -388,7 +388,7 @@ export default function RegisterPage() {
                 fontSize: '0.8rem',
                 marginTop: '4px'
               }}>
-                By signing up, you agree to our Terms of Service and Privacy Policy
+                New accounts start with staff access. Admins can upgrade roles later from the Users page.
               </p>
             </form>
 

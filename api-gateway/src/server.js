@@ -66,9 +66,9 @@ const authenticate = (req, res, next) => {
 };
 
 // Role-based access control
-const requireAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') return next();
-  return res.status(403).json({ error: 'Admin access required.' });
+const requireRoles = (...roles) => (req, res, next) => {
+  if (req.user && roles.includes(req.user.role)) return next();
+  return res.status(403).json({ error: `${roles.join(' or ')} access required.` });
 };
 
 // Custom proxy function using axios
@@ -129,14 +129,15 @@ app.get('/health', (req, res) => {
       auth: process.env.AUTH_SERVICE_URL,
       product: process.env.PRODUCT_SERVICE_URL,
       inventory: process.env.INVENTORY_SERVICE_URL,
-      supplier: process.env.SUPPLIER_SERVICE_URL
+      supplier: process.env.SUPPLIER_SERVICE_URL,
+      procurement: process.env.PROCUREMENT_SERVICE_URL
     }
   });
 });
 
 // ── AUTH ROUTES ──────────────────────────────────────────────────────────────
 // Protected auth routes (users management)
-app.all('/api/auth/users*', authenticate, (req, res) => {
+app.all('/api/auth/users*', authenticate, requireRoles('admin'), (req, res) => {
   const path = req.path.replace('/api/auth', '');
   forwardRequest(req, res, `${process.env.AUTH_SERVICE_URL}/api/auth${path}`);
 });
@@ -194,6 +195,15 @@ app.all('/api/suppliers/*', authenticate, (req, res) => {
 
 app.all('/api/suppliers', authenticate, (req, res) => {
   forwardRequest(req, res, `${process.env.SUPPLIER_SERVICE_URL}/api/suppliers`);
+});
+
+app.all('/api/procurement/*', authenticate, requireRoles('manager', 'admin'), (req, res) => {
+  const path = req.path.replace('/api/procurement', '');
+  forwardRequest(req, res, `${process.env.PROCUREMENT_SERVICE_URL}/api/procurement${path}`);
+});
+
+app.all('/api/procurement', authenticate, requireRoles('manager', 'admin'), (req, res) => {
+  forwardRequest(req, res, `${process.env.PROCUREMENT_SERVICE_URL}/api/procurement`);
 });
 
 // 404 handler

@@ -20,7 +20,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const status = error.response?.status;
+    const message = String(error.response?.data?.error || '').toLowerCase();
+    const shouldLogout =
+      status === 401 ||
+      (status === 403 && (message.includes('invalid or expired token') || message.includes('access denied')));
+
+    if (shouldLogout) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -85,6 +91,13 @@ export const supplierAPI = {
   update: (id, data) => api.put(`/suppliers/${id}`, data),
   delete: (id) => api.delete(`/suppliers/${id}`),
   getStats: () => api.get('/suppliers/stats/summary')
+};
+
+export const procurementAPI = {
+  getSummary: () => api.get('/procurement/dashboard/summary'),
+  getRecommendations: (params) => api.get('/procurement/recommendations', { params }),
+  getDecisions: () => api.get('/procurement/decisions'),
+  updateDecision: (productId, data) => api.put(`/procurement/recommendations/${productId}/decision`, data)
 };
 
 export default api;
