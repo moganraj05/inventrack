@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://api-gateway-r6zm.onrender.com/api',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' }
 });
@@ -22,20 +22,24 @@ api.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const message = String(error.response?.data?.error || '').toLowerCase();
+
     const shouldLogout =
       status === 401 ||
-      (status === 403 && (message.includes('invalid or expired token') || message.includes('access denied')));
+      (status === 403 &&
+        (message.includes('invalid or expired token') ||
+         message.includes('access denied')));
 
     if (shouldLogout) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );
 
-// ─── AUTH ────────────────────────────────────────────────────────────────────
+// ─── AUTH ─────────────────────────────────────────
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
@@ -44,7 +48,7 @@ export const authAPI = {
   updateRole: (id, role) => api.put(`/auth/users/${id}/role`, { role })
 };
 
-// ─── PRODUCTS ────────────────────────────────────────────────────────────────
+// ─── PRODUCTS ─────────────────────────────────────
 export const productAPI = {
   getAll: (params) => api.get('/products', { params }),
   getById: (id) => api.get(`/products/${id}`),
@@ -53,7 +57,7 @@ export const productAPI = {
   delete: (id) => api.delete(`/products/${id}`)
 };
 
-// ─── CATEGORIES ──────────────────────────────────────────────────────────────
+// ─── CATEGORIES ───────────────────────────────────
 export const categoryAPI = {
   getAll: () => api.get('/categories'),
   create: (data) => api.post('/categories', data),
@@ -61,7 +65,7 @@ export const categoryAPI = {
   delete: (id) => api.delete(`/categories/${id}`)
 };
 
-// ─── INVENTORY ───────────────────────────────────────────────────────────────
+// ─── INVENTORY ────────────────────────────────────
 export const inventoryAPI = {
   getAll: (params) => api.get('/inventory', { params }),
   getByProduct: (productId) => api.get(`/inventory/${productId}`),
@@ -71,19 +75,22 @@ export const inventoryAPI = {
   getFilterMeta: () => api.get('/inventory/meta/filters'),
   getLowStock: () => api.get('/inventory/alerts/low-stock'),
   getSummary: () => api.get('/inventory/dashboard/summary'),
-  // Stock Transfer endpoints
+
+  // Stock Transfer
   initiateTransfer: (data) => api.post('/inventory/transfer/initiate', data),
   getTransfers: (params) => api.get('/inventory/transfer', { params }),
-  receiveTransfer: (transferId) => api.put(`/inventory/transfer/${transferId}/received`),
-  cancelTransfer: (transferId) => api.delete(`/inventory/transfer/${transferId}`)
+  receiveTransfer: (transferId) =>
+    api.put(`/inventory/transfer/${transferId}/received`),
+  cancelTransfer: (transferId) =>
+    api.delete(`/inventory/transfer/${transferId}`)
 };
 
-// ─── TRANSACTIONS ────────────────────────────────────────────────────────────
+// ─── TRANSACTIONS ─────────────────────────────────
 export const transactionAPI = {
   getAll: (params) => api.get('/transactions', { params })
 };
 
-// ─── SUPPLIERS ───────────────────────────────────────────────────────────────
+// ─── SUPPLIERS ────────────────────────────────────
 export const supplierAPI = {
   getAll: (params) => api.get('/suppliers', { params }),
   getById: (id) => api.get(`/suppliers/${id}`),
@@ -93,11 +100,14 @@ export const supplierAPI = {
   getStats: () => api.get('/suppliers/stats/summary')
 };
 
+// ─── PROCUREMENT ──────────────────────────────────
 export const procurementAPI = {
   getSummary: () => api.get('/procurement/dashboard/summary'),
-  getRecommendations: (params) => api.get('/procurement/recommendations', { params }),
+  getRecommendations: (params) =>
+    api.get('/procurement/recommendations', { params }),
   getDecisions: () => api.get('/procurement/decisions'),
-  updateDecision: (productId, data) => api.put(`/procurement/recommendations/${productId}/decision`, data)
+  updateDecision: (productId, data) =>
+    api.put(`/procurement/recommendations/${productId}/decision`, data)
 };
 
 export default api;
