@@ -36,7 +36,7 @@ const globalLimiter = rateLimit({
 // Auth rate limiter (stricter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 5,
   message: { error: 'Too many auth attempts, please try again later.' }
 });
 

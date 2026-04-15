@@ -1,9 +1,6 @@
 # dependencies
 node_modules/
 
-# env files (IMPORTANT - contains DB password)
-.env
-
 # build files
 dist/
 build/
