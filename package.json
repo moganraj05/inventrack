@@ -2,7 +2,7 @@
   "name": "inventrack",
   "version": "1.0.0",
   "description": "Microservices Inventory Management System",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "install:all": "npm install --prefix api-gateway && npm install --prefix auth-service && npm install --prefix product-service && npm install --prefix inventory-service && npm install --prefix supplier-service && npm install --prefix procurement-service && npm install --prefix frontend",
     "dev:gateway": "npm run dev --prefix api-gateway",
